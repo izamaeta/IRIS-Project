@@ -7,63 +7,52 @@ class DisplayManager:
         pygame.init()
         with open("config.json", 'r') as f:
             self.config = json.load(f)
-            
         self.screen = pygame.display.set_mode((width, height))
-        pygame.display.set_caption("IRIS Virtual Display")
         self.font = pygame.font.SysFont("Consolas", 20)
         self.clock = pygame.time.Clock()
-        
-        # Animasyon için barların mevcut görsel değerleri (Hemen değişmemesi için)
         self.visual_cpu = 0.0
-        self.visual_battery = 0.0
-        
+        self.overlay_alpha = 0
         self.state_colors = {k: tuple(v) for k, v in self.config["colors"].items()}
 
     def draw_bar(self, x, y, width, height, percent, label, color):
-        """Master Plan 12: Akıcı barlar için yardımcı fonksiyon"""
-        # Dış çerçeve
-        pygame.draw.rect(self.screen, (200, 200, 200), (x, y, width, height), 2)
-        # Doluluk kısmı
-        fill_width = (percent / 100) * (width - 4)
-        pygame.draw.rect(self.screen, color, (x + 2, y + 2, fill_width, height - 4))
-        # Etiket
-        text = self.font.render(f"{label}: {int(percent)}%", True, (255, 255, 255))
-        self.screen.blit(text, (x, y - 25))
+        pygame.draw.rect(self.screen, (150, 150, 150), (x, y, width, height), 1)
+        fill_width = (percent / 100) * (width - 2)
+        pygame.draw.rect(self.screen, color, (x + 1, y + 1, fill_width, height - 2))
+        lbl = self.font.render(f"{label}: {int(percent)}%", True, (255, 255, 255))
+        self.screen.blit(lbl, (x, y - 22))
 
     def update_display(self, data):
-        dt = self.clock.tick(60) / 1000.0 
-        
-        # Animasyon yumuşatma (Lerp)
-        lerp_speed = 50.0 
-        self.visual_cpu += (data.get("cpu_usage", 0) - self.visual_cpu) * (lerp_speed * dt / 10)
-        self.visual_battery = data.get("battery", 0)
-
-        # Arka plan rengi
+        dt = self.clock.tick(60) / 1000.0
         current_state = data.get("STATE", "IDLE")
+
+        # 1. Animasyon Yumuşatma (Lerp)
+        self.visual_cpu += (data.get("cpu_usage", 0) - self.visual_cpu) * (5.0 * dt)
+        
+        # 2. Deep Sleep Kararma (Master Plan 31)
+        if current_state == "SLEEP":
+            self.overlay_alpha = min(255, self.overlay_alpha + 200 * dt)
+        else:
+            self.overlay_alpha = max(0, self.overlay_alpha - 200 * dt)
+
+        # 3. Çizimler
         self.screen.fill(self.state_colors.get(current_state, (0, 0, 0)))
-
-        # 1. Üst Bilgi Satırı (Tarih/Saat ve Durum) 
-        timestamp = data.get("timestamp", "")
-        time_text = self.font.render(f"{timestamp}", True, (200, 200, 200))
-        self.screen.blit(time_text, (20, 10))
-
-        # 2. Barlar (Orta Bölüm)
-        # CPU Barı
+        self.screen.blit(self.font.render(data.get("timestamp", ""), True, (200, 200, 200)), (20, 10))
         self.draw_bar(50, 80, 380, 25, self.visual_cpu, "CPU LOAD", (0, 200, 255))
-        # Pil Barı 
-        self.draw_bar(50, 160, 380, 25, self.visual_battery, "BATTERY", (0, 255, 100))
+        self.draw_bar(50, 160, 380, 25, data.get("battery", 0), "BATTERY", (0, 255, 100))
+        
+        # Footer
+        pygame.draw.line(self.screen, (80, 80, 80), (20, 240), (460, 240), 1)
+        self.screen.blit(self.font.render(f"SYSTEM STATE: {current_state}", True, (255, 255, 255)), (20, 260))
 
-        # 3. Alt Bilgi Paneli (Durum ve Detaylar) 
-        pygame.draw.line(self.screen, (100, 100, 100), (20, 240), (460, 240), 2)
-        
-        state_text = self.font.render(f"MODE: {current_state}", True, (255, 255, 255))
-        self.screen.blit(state_text, (20, 260))
-        
-        # Ekstra bilgi (Opsiyonel: Master Plan 16'daki uygulama ismi için yer açtık)
-        app_text = self.font.render("System: Healthy", True, (150, 150, 150))
-        self.screen.blit(app_text, (20, 290))
-            
+        # 4. Fade Overlay
+        if self.overlay_alpha > 0:
+            fade = pygame.Surface((480, 320))
+            fade.set_alpha(int(self.overlay_alpha))
+            fade.fill((0, 0, 0))
+            self.screen.blit(fade, (0, 0))
+
         pygame.display.flip()
+
     def check_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
