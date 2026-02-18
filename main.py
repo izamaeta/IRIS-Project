@@ -25,7 +25,6 @@ def main():
             stats = monitor.get_stats()
             
             # C. Karar Mekanizması (Logic Layer)
-            # state_machine artık hem MOD'u hem de anlık REFLEKS'i döndürüyor
             current_state, reflex_trigger = state_machine.update(stats, is_connected)
             
             # Veriye güncel durumu ekle
@@ -34,13 +33,12 @@ def main():
             # D. Görselleştirme (Display Layer)
             display.update_display(stats, reflex_trigger)
             
-            # E. DEBUG Paneli (Terminalde anlık ne gördüğünü izle)
-            # Eğer her şey IDLE ise buradaki 'active_app' ismine bakıp config'e ekleme yapabilirsin.
+            # E. DEBUG Paneli
             if reflex_trigger:
                 print(f"[!] REFLEKS: Yeni uygulama algılandı -> {stats['active_app']}")
                 print(f"[?] TAHMİN EDİLEN MOD: {current_state}")
 
-            # Akıcılık için kısa bekleme (60 FPS hedefi için 0.01s yeterli)
+            # Akıcılık için kısa bekleme
             time.sleep(0.01)
 
     except KeyboardInterrupt:

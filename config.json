@@ -10,12 +10,12 @@
         "battery_alert": 20
     },
     "categories": {
-    "CODING": ["vscode", "pycharm", "cursor", "sublime", "terminal", "dbeaver", "github", "stack overflow"],
-    "SOCIAL": ["whatsapp", "discord", "slack", "telegram", "messenger", "instagram"],
-    "BROWSER": ["google search", "yandex", "bing", "duckduckgo", "wiki"],
-    "MUSIC": ["spotify", "music", "soundcloud", "deezer"],
-    "VIDEO": ["youtube", "netflix", "prime video", "twitch"]
-},
+        "CODING": ["vscode", "pycharm", "cursor", "sublime", "terminal", "dbeaver", "github", "stack overflow"],
+        "SOCIAL": ["whatsapp", "discord", "slack", "telegram", "messenger", "instagram"],
+        "BROWSER": ["google search", "yandex", "bing", "duckduckgo", "wiki"],
+        "MUSIC": ["spotify", "music", "soundcloud", "deezer"],
+        "VIDEO": ["youtube", "netflix", "prime video", "twitch"]
+    },
     "colors": {
         "IDLE": [0, 40, 0],
         "BUSY": [100, 60, 0],

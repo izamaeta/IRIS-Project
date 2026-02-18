@@ -864,3 +864,43 @@
 2026-02-19 01:19:55 - INFO - MOD DEÐÝÞTÝ: IDLE | Sebep: Google Gemini - Google Chrome
 2026-02-19 01:20:28 - INFO - MOD DEÐÝÞTÝ: CODING | Sebep: main.py - IRIS-Project - Visual Studio Code
 2026-02-19 01:20:34 - INFO - MOD DEÐÝÞTÝ: IDLE | Sebep: Google Gemini - Google Chrome
+2026-02-19 01:20:53 - INFO - MOD DEÐÝÞTÝ: CODING | Sebep: main.py - IRIS-Project - Visual Studio Code
+2026-02-19 01:20:58 - INFO - MOD DEÐÝÞTÝ: SOCIAL | Sebep: WhatsApp
+2026-02-19 01:21:03 - INFO - MOD DEÐÝÞTÝ: IDLE | Sebep: Ýndirilenler - Dosya Gezgini
+2026-02-19 01:23:22 - INFO - MOD DEÐÝÞTÝ: CODING | Sebep: main.py - IRIS-Project - Visual Studio Code
+2026-02-19 01:23:35 - INFO - MOD DEÐÝÞTÝ: IDLE | Sebep: Google Gemini - Google Chrome
+2026-02-19 01:23:51 - INFO - MOD DEÐÝÞTÝ: CODING | Sebep: main.py - IRIS-Project - Visual Studio Code
+2026-02-19 01:23:58 - INFO - MOD DEÐÝÞTÝ: IDLE | Sebep: Google Gemini - Google Chrome
+2026-02-19 01:24:28 - INFO - MOD DEÐÝÞTÝ: MUSIC | Sebep: YouTube Music - Google Chrome
+2026-02-19 01:24:38 - INFO - MOD DEÐÝÞTÝ: CODING | Sebep: display_manager.py - IRIS-Project - Visual Studio Code
+2026-02-19 01:25:11 - INFO - MOD DEÐÝÞTÝ: CODING | Sebep: display_manager.py - IRIS-Project - Visual Studio Code
+2026-02-19 01:25:17 - INFO - MOD DEÐÝÞTÝ: IDLE | Sebep: Google Gemini - Google Chrome
+2026-02-19 01:25:28 - INFO - MOD DEÐÝÞTÝ: VIDEO | Sebep: Netflix
+2026-02-19 01:25:37 - INFO - MOD DEÐÝÞTÝ: IDLE | Sebep: Google Gemini - Google Chrome
+2026-02-19 01:29:42 - INFO - MOD DEÐÝÞTÝ: MUSIC | Sebep: Roi | YouTube Music - Google Chrome
+2026-02-19 01:29:48 - INFO - MOD DEÐÝÞTÝ: IDLE | Sebep: IRIS Proje - Plan Ýncelemesi ve Yorumlar - Google Chrome
+2026-02-19 01:30:29 - INFO - MOD DEÐÝÞTÝ: CODING | Sebep: config.json - IRIS-Project - Visual Studio Code
+2026-02-19 01:30:38 - INFO - MOD DEÐÝÞTÝ: IDLE | Sebep: Google Gemini - Google Chrome
+2026-02-19 01:30:54 - INFO - MOD DEÐÝÞTÝ: CODING | Sebep: \u25cf config.json - IRIS-Project - Visual Studio Code
+2026-02-19 01:31:14 - INFO - MOD DEÐÝÞTÝ: CODING | Sebep: main.py - IRIS-Project - Visual Studio Code
+2026-02-19 01:31:34 - INFO - MOD DEÐÝÞTÝ: BROWSER | Sebep: Google Gemini - Google Chrome
+2026-02-19 01:31:40 - INFO - MOD DEÐÝÞTÝ: CODING | Sebep: config.json - IRIS-Project - Visual Studio Code
+2026-02-19 01:31:49 - INFO - TRANSITION: WAKEUP -> IDLE
+2026-02-19 01:31:51 - INFO - TRANSITION: IDLE -> DIZZY
+2026-02-19 01:31:55 - INFO - TRANSITION: WAKEUP -> IDLE
+2026-02-19 01:31:57 - INFO - TRANSITION: IDLE -> BROWSER
+2026-02-19 01:32:01 - INFO - TRANSITION: BROWSER -> DIZZY
+2026-02-19 01:32:05 - INFO - TRANSITION: WAKEUP -> IDLE
+2026-02-19 01:32:09 - INFO - TRANSITION: IDLE -> DIZZY
+2026-02-19 01:32:12 - INFO - TRANSITION: DIZZY -> IDLE
+2026-02-19 01:32:19 - INFO - TRANSITION: IDLE -> DIZZY
+2026-02-19 01:32:22 - INFO - TRANSITION: DIZZY -> IDLE
+2026-02-19 01:32:48 - INFO - TRANSITION: IDLE -> CODING
+2026-02-19 01:32:52 - INFO - TRANSITION: CODING -> IDLE
+2026-02-19 01:32:57 - INFO - TRANSITION: IDLE -> CODING
+2026-02-19 01:33:03 - INFO - TRANSITION: CODING -> BROWSER
+2026-02-19 01:33:18 - INFO - TRANSITION: BROWSER -> CODING
+2026-02-19 01:33:19 - INFO - TRANSITION: CODING -> DIZZY
+2026-02-19 01:33:22 - INFO - TRANSITION: WAKEUP -> IDLE
+2026-02-19 01:33:24 - INFO - TRANSITION: IDLE -> BROWSER
+2026-02-19 01:33:34 - INFO - TRANSITION: BROWSER -> DIZZY

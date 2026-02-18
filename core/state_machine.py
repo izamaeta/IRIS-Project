@@ -49,25 +49,20 @@ class StateMachine:
         if data['battery'] < self.config["thresholds"]["battery_alert"]:
             return "ALERT"
 
-        # 2. OTOMATİK TESPİT: Uzantılar (Zaten eklemiştik)
+        # 2. OTOMATİK TESPİT: Uzantılar
         coding_exts = [".py", ".cpp", ".js", ".java", ".sql", ".html", ".css", ".go", ".rs", ".ts"]
         if any(ext in app_name for ext in coding_exts):
             return "CODING"
 
-        # 3. KATEGORİ REHBERİ (Daha geniş kapsamlı anahtar kelime taraması)
+        # 3. KATEGORİ REHBERİ
         for mode, keywords in self.config.get("categories", {}).items():
-            # Sadece kelimeyi değil, içinde geçip geçmediğini daha esnek kontrol et
             if any(kw in app_name for kw in keywords):
                 return mode
 
-        # 4. AKTİF ÇALIŞMA TESPİTİ (Eğer hiçbir kategoriye girmiyorsa)
-        # Orta düzey CPU kullanımı ve herhangi bir uygulama açıksa BUSY sayılabilir
-        # IDLE sadece gerçekten hiçbir şey yapılmadığında (Masaüstü vb.) gözüksün
+        # 4. AKTİF ÇALIŞMA TESPİTİ
         if data['cpu_usage'] > self.config["thresholds"]["cpu_busy"]:
             return "BUSY"
         
-        # Eğer bir uygulama ismi varsa ama kategorize edilemiyorsa 'ACTIVE' gibi ara bir mod da uydurabiliriz
-        # Ama şimdilik IDLE kalsın, sadece kategorileri config'den artıracağız.
         return "IDLE"
 
     def _change_state(self, new_state, data):
