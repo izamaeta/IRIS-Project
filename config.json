@@ -1,0 +1,16 @@
+{
+    "settings": {
+        "polling_interval": 1.0,
+        "width": 480,
+        "height": 320
+    },
+    "thresholds": {
+        "cpu_busy": 70,
+        "battery_alert": 20
+    },
+    "colors": {
+        "IDLE": [0, 40, 0],
+        "BUSY": [100, 60, 0],
+        "ALERT": [100, 0, 0]
+    }
+}
