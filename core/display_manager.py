@@ -1,125 +1,189 @@
 import pygame
 import sys
 import json
+import random
+import math
+import time
 
 class DisplayManager:
     def __init__(self, width=480, height=320):
         pygame.init()
-        with open("config.json", 'r') as f:
+        with open("config.json", 'r', encoding='utf-8') as f:
             self.config = json.load(f)
             
         self.screen = pygame.display.set_mode((width, height))
-        pygame.display.set_caption("IRIS Virtual Display")
-        self.font = pygame.font.SysFont("Consolas", 18)
+        pygame.display.set_caption("IRIS Core")
+        
+        try:
+            self.font = pygame.font.SysFont("Consolas", 12, bold=True)
+            self.matrix_font = pygame.font.SysFont("Consolas", 10)
+        except:
+            self.font = pygame.font.SysFont("Arial", 12, bold=True)
+            self.matrix_font = pygame.font.SysFont("Arial", 10)
+            
         self.clock = pygame.time.Clock()
+        self.eye_h, self.target_h = 0.0, 0.35
+        self.glitch_offset, self.shake_timer = [0, 0], 0
+        self.blink_timer, self.is_blinking = 0, False
+        self.micro_move = [0, 0]
         
-        # Animasyon Değişkenleri
-        self.visual_cpu = 0.0
-        self.visual_bat = 0.0
-        self.eye_y_open = 0.7
-        self.target_y_open = 0.7
-        self.eye_animation_timer = 0
-        self.overlay_alpha = 0
-        self.state_colors = {k: tuple(v) for k, v in self.config["colors"].items()}
-
-    def draw_eyes(self, x, y, size, state):
-        """Daha dost canlısı, dijital/neon göz tasarımı (Rounded Rects)"""
+        self.colors = {k: tuple(v) for k, v in self.config["colors"].items()}
+        self.current_bg = list(self.colors["IDLE"])
+        self.current_eye_color = list(self.colors["GLOW_WHITE"])
         
-        # 1. Duruma göre hedef açıklık ve renk belirle
-        eye_color = (255, 255, 255) # Varsayılan Beyaz
+        # --- Border ve Kontrast Takibi ---
+        self.border_color = list(self.colors["GLOW_WHITE"])
+        self.last_state = "IDLE"
         
-        if state == "CODING" or state == "BUSY":
-            self.target_y_open = 0.25 # Odaklanmış/Hacker modu
-            eye_color = (0, 255, 255) # Cyan
-        elif state == "ALERT":
-            self.target_y_open = 1.1  # Şaşkın/Uyarı modu
-            eye_color = (255, 100, 100) # Soft Kırmızı
-        elif state == "SLEEP":
-            self.target_y_open = 0.05 # Kapalı
-            eye_color = (100, 100, 100) # Gri
-        else:
-            self.target_y_open = 0.6  # Standart bakış
-            eye_color = (200, 255, 200) # Hafif Yeşilimsi
+        self.is_scanning = False
+        self.scan_timer = 0
+        self.particles = [] 
+        self.matrix_columns = [0] * (width // 10)
 
-        # 2. Yumuşak Geçiş (Lerp) ve Göz Kırpma
-        if self.eye_animation_timer > 0:
-            current_eye_h = 0.05
-        else:
-            self.eye_y_open += (self.target_y_open - self.eye_y_open) * 0.1
-            current_eye_h = self.eye_y_open
+    def _lerp_color(self, cur, target, speed=0.025):
+        return [cur[i] + (target[i] - cur[i]) * speed for i in range(3)]
 
-        # 3. Çizim (Dijital Bloklar)
-        rect_width = size * 1.3
-        rect_height = size * current_eye_h
-        # Köşe yumuşatma (LVGL uyumlu)
-        corner_radius = int(rect_height / 2) if rect_height > 10 else 2
+    def _get_contrast_color(self, color):
+        # RGB değerlerini 255'ten çıkararak hızlıca zıt rengi alır
+        return [255 - color[0], 255 - color[1], 255 - color[2]]
 
-        for offset in [-75, 75]: # Gözler arası mesafe
-            eye_rect = pygame.Rect(x + offset - rect_width/2, y - rect_height/2, rect_width, rect_height)
+    def trigger_scan(self):
+        self.is_scanning = True
+        self.scan_timer = 0
+
+    def _update_particles(self):
+        for p in self.particles[:]:
+            p['x'] += p['vx']
+            p['y'] += p['vy']
+            p['life'] -= p['decay']
+            if p['life'] <= 0: self.particles.remove(p)
+
+    def _get_element_params(self, color):
+        r, g, b = color
+        if r > g + 50 and r > b + 50:
+            return {'vx': (-0.3, 0.3), 'vy': (0.5, 1.2), 'decay': 0.02, 'type': 'drop'}
+        if g > r + 50 and g > b + 50:
+            return {'vx': (-1.5, 1.5), 'vy': (0.2, 0.6), 'decay': 0.03, 'type': 'leaf'}
+        if b > r + 50 and b > g + 50:
+            return {'vx': (-0.1, 0.1), 'vy': (1.5, 3.0), 'decay': 0.05, 'type': 'ice'}
+        if r > 100 and b > 100 and g < 100:
+            return {'vx': (-2.0, 2.0), 'vy': (-1.0, 1.0), 'decay': 0.04, 'type': 'plasma'}
+        return {'vx': (-2.5, 2.5), 'vy': (-2.0, 0.5), 'decay': 0.06, 'type': 'spark'}
+
+    def draw_eyes(self, state, glitch_mode, base_color):
+        if random.random() < 0.05:
+            self.micro_move = [random.uniform(-0.8, 0.8), random.uniform(-0.8, 0.8)]
             
-            # Ana Neon Blok
-            pygame.draw.rect(self.screen, eye_color, eye_rect, border_radius=corner_radius)
-            
-            # İç Parlama (Derinlik hissi için hafif açık renk çerçeve)
-            if current_eye_h > 0.3:
-                inner_color = (min(255, eye_color[0]+40), min(255, eye_color[1]+40), min(255, eye_color[2]+40))
-                pygame.draw.rect(self.screen, inner_color, eye_rect.inflate(-4, -4), 1, border_radius=corner_radius)
-
-    def draw_bar(self, x, y, width, height, percent, label, color):
-        pygame.draw.rect(self.screen, (80, 80, 80), (x, y, width, height), 1)
-        fill_w = (percent / 100) * (width - 2)
-        pygame.draw.rect(self.screen, color, (x + 1, y + 1, fill_w, height - 2))
-        lbl = self.font.render(f"{label}: {int(percent)}%", True, (255, 255, 255))
-        self.screen.blit(lbl, (x, y - 22))
-
-    def update_display(self, data, reflex_event):
-        dt = self.clock.tick(60) / 1000.0
+        x, y = 240 + self.glitch_offset[0] + self.micro_move[0], 120 + self.glitch_offset[1] + self.micro_move[1]
+        size_w, size_h = 75, 60
         
-        if reflex_event:
-            self.eye_animation_timer = 0.3
+        height_map = {"STARTUP": 0.05, "CODING": 0.28, "VSCODE": 0.25, "GEMINI": 0.35, "YOUTUBE": 0.30, "SLEEP": 0.02, "ALERT": 0.75}
+        self.target_h = height_map.get(state, 0.35)
 
-        # Değerleri yumuşat
-        self.visual_cpu += (data.get("cpu_usage", 0) - self.visual_cpu) * (5.0 * dt)
-        self.visual_bat += (data.get("battery", 0) - self.visual_bat) * (2.0 * dt)
-
-        current_state = data.get("STATE", "IDLE")
-        bg_color = list(self.state_colors.get(current_state, (0, 0, 0)))
-        
-        if self.eye_animation_timer > 0:
-            self.eye_animation_timer -= dt
-
-        self.screen.fill(bg_color)
-
-        # 1. Gözler (Dijital Karakter)
-        self.draw_eyes(240, 70, 45, current_state)
-
-        # 2. Barlar (Veri Katmanı)
-        self.draw_bar(50, 145, 380, 20, self.visual_cpu, "CPU LOAD", (0, 200, 255))
-        self.draw_bar(50, 200, 380, 20, self.visual_bat, "BATTERY", (0, 255, 100))
-
-        # 3. Bilgiler (Text Layer)
-        self.screen.blit(self.font.render(data.get("timestamp", ""), True, (150, 150, 150)), (20, 10))
-        self.screen.blit(self.font.render(f"MODE: {current_state}", True, (255, 255, 255)), (20, 250))
-        
-        app_name = data.get("active_app", "Desktop")
-        self.screen.blit(self.font.render(f"APP: {app_name[:35]}", True, (120, 120, 120)), (20, 280))
-
-        # 4. Deep Sleep Overlay
-        if current_state == "SLEEP":
-            self.overlay_alpha = min(255, self.overlay_alpha + 150 * dt)
+        if not self.is_blinking and random.random() < 0.005:
+            self.is_blinking, self.blink_timer = True, 0
+        if self.is_blinking:
+            self.blink_timer += 0.20
+            current_h = self.eye_h * (1 - math.sin(self.blink_timer * math.pi))
+            if self.blink_timer >= 1.0: self.is_blinking = False
         else:
-            self.overlay_alpha = max(0, self.overlay_alpha - 150 * dt)
+            self.eye_h += (self.target_h - self.eye_h) * 0.12
+            current_h = self.eye_h
 
-        if self.overlay_alpha > 0:
-            fade = pygame.Surface((480, 320))
-            fade.set_alpha(int(self.overlay_alpha))
-            fade.fill((0, 0, 0))
-            self.screen.blit(fade, (0, 0))
+        # --- GÜNCEL: Sert Patlama ve Yumuşak Dönüş Mantığı ---
+        if state != self.last_state:
+            # Durum değiştiği AN (ilk kare): Rengi zıt kutba fırlat (Sert Patlama)
+            self.border_color = self._get_contrast_color(base_color)
+            self.last_state = state
+        else:
+            # Takip eden karelerde: Yeni renge (base_color) yumuşakça süzül
+            # Hızı 0.08'den 0.05'e çektim ki o süzülme daha belirgin olsun
+            self.border_color = self._lerp_color(self.border_color, base_color, 0.05)
 
+        pulse = (math.sin(time.time() * 2.5) + 1) * 6
+        
+        for offset in [-100, 100]:
+            rect = pygame.Rect(x + offset - (size_w/2), y - (size_h * current_h)/2, size_w, max(2, size_h * current_h))
+            
+            if state != "SLEEP":
+                # Patlama etkisini artırmak için border kalınlığını inflate ile biraz daha belirgin yaptık
+                # border_color şu an patlama anında kontrast renkte, sonra base_color'a sönüyor.
+                pygame.draw.rect(self.screen, self.border_color, rect.inflate(10, 10), width=3, border_radius=12)
+
+                # Glow Efekti (Mevcut)
+                for i in range(3, 0, -1):
+                    alpha = 15 // i
+                    glow_surf = pygame.Surface((rect.width + i*14, rect.height + i*14), pygame.SRCALPHA)
+                    p_color = [min(255, max(0, int(c + pulse))) for c in base_color]
+                    pygame.draw.rect(glow_surf, (*p_color, alpha), (0, 0, glow_surf.get_width(), glow_surf.get_height()), border_radius=15 + i*2)
+                    self.screen.blit(glow_surf, (rect.x - i*7, rect.y - i*7))
+
+            # Ana Göz Katmanı
+            pygame.draw.rect(self.screen, base_color, rect, border_radius=8)
+
+            # Tarama ve Parçacık Mantığı (Aynen korundu)
+            if self.is_scanning and current_h > 0.1:
+                scan_y = rect.y + (rect.height * self.scan_timer)
+                scan_line = pygame.Rect(rect.x, scan_y - 1, rect.width, 2)
+                laser_color = [min(255, c + 100) for c in base_color]
+                pygame.draw.rect(self.screen, laser_color, scan_line, border_radius=1)
+                
+                e = self._get_element_params(base_color)
+                if random.random() < 0.6:
+                    self.particles.append({
+                        'x': random.randint(rect.left, rect.right), 'y': scan_y,
+                        'vx': random.uniform(*e['vx']), 'vy': random.uniform(*e['vy']),
+                        'life': 1.0, 'decay': e['decay'], 'color': laser_color, 'type': e['type']
+                    })
+
+    def update_display(self, data, reflex_event, glitch_mode):
+        self.clock.tick(60)
+        state = data.get("STATE", "IDLE")
+        
+        if reflex_event: self.trigger_scan()
+        if self.is_scanning:
+            self.scan_timer += 0.05
+            if self.scan_timer >= 1.0: self.is_scanning = False
+        self._update_particles()
+
+        brand_color = self.colors.get(state, data.get("dynamic_color", self.colors["IDLE"]))
+        bg_target = [int(c * 0.20) for c in brand_color]
+        eye_target = [min(255, int(c * 1.5)) for c in brand_color]
+
+        self.current_bg = self._lerp_color(self.current_bg, bg_target)
+        self.current_eye_color = self._lerp_color(self.current_eye_color, eye_target)
+        
+        self.screen.fill(self.current_bg)
+        
+        # Mevcut Matrix Arka Plan Efekti (Startup modu için)
+        if state == "STARTUP":
+            for i in range(len(self.matrix_columns)):
+                char = random.choice("01")
+                txt = self.matrix_font.render(char, True, [int(c*0.3) for c in self.current_eye_color])
+                self.screen.blit(txt, (i * 10, self.matrix_columns[i] * 10))
+                if self.matrix_columns[i] * 10 > 320 or random.random() > 0.96: self.matrix_columns[i] = 0
+                else: self.matrix_columns[i] += 1
+
+        self.draw_eyes(state, glitch_mode, self.current_eye_color)
+        
+        # Mevcut Parçacık Çizimi
+        for p in self.particles:
+            if p['type'] == 'plasma':
+                pygame.draw.circle(self.screen, p['color'], (int(p['x']), int(p['y'])), random.randint(1, 3))
+            else:
+                pygame.draw.rect(self.screen, p['color'], (int(p['x']), int(p['y']), 2, 2))
+        
+        # Mevcut Uygulama Bilgisi Yazısı
+        if state not in ["SLEEP", "STARTUP"]:
+            app_info = data.get("active_app", "").upper()
+            if app_info:
+                txt_color = [int(c * 0.7) for c in self.current_eye_color]
+                txt = self.font.render(app_info, True, txt_color)
+                self.screen.blit(txt, (465 - txt.get_width(), 295))
+                
         pygame.display.flip()
 
     def check_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                pygame.quit(); sys.exit()

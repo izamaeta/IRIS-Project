@@ -4,69 +4,56 @@ from utils.logger import iris_logger
 
 class StateMachine:
     def __init__(self, config_path="config.json"):
-        with open(config_path, 'r') as f:
+        with open(config_path, 'r', encoding='utf-8') as f:
             self.config = json.load(f)
         
-        self.current_state = "IDLE"
+        self.current_state = "STARTUP"
         self.last_app = ""
-        self.potential_new_mode = None
-        self.last_app_change_time = 0
-        self.mode_delay = self.config["settings"].get("mode_switch_delay", 3.0)
+        self.last_app_change_time = time.time()
+        # Sekme geçişleri için gecikmeyi biraz daha kısalttık
+        self.mode_delay = self.config["settings"].get("mode_switch_delay", 1.0)
 
     def update(self, data, is_connected=True):
-        if not is_connected: 
-            return self._change_state("SLEEP", data), False
+        if not is_connected: return "SLEEP", False, False
 
-        current_app = data.get("active_app", "").lower()
-        reflex_event = False
-
-        # 1. ANLIK REFLEKS (Görsel tepki için)
-        if current_app != self.last_app:
-            reflex_event = True
-            self.last_app = current_app
-
-        # 2. ZEKİ TAHMİN MEKANİZMASI (Heuristic Inference)
-        target_mode = self._infer_target_mode(current_app, data)
-
-        # 3. GECİKMELİ KARAR (Debounce - Stabilite için)
+        current_info = data.get("active_app", "").lower()
         now = time.time()
-        final_state = self.current_state
+        reflex_event = False
+        glitch_mode = False
 
+        if current_info != self.last_app:
+            if (now - self.last_app_change_time) < self.config["settings"].get("glitch_threshold", 0.3):
+                glitch_mode = True
+            reflex_event = True
+            self.last_app = current_info
+            self.last_app_change_time = now
+
+        # Alt Uygulama/Sekme Analizi: Config'deki hiyerarşiye göre mod tespiti
+        target_mode = self._infer_target_mode(current_info, data)
+
+        if self.current_state == "STARTUP":
+            if (now - self.last_app_change_time) > 3.0:
+                self.current_state = "IDLE"
+            return self.current_state, reflex_event, glitch_mode
+
+        # Mod geçişi: Eğer hedef mod mevcut moddan farklıysa süre kontrolü yap
         if target_mode != self.current_state:
-            if target_mode != self.potential_new_mode:
-                self.potential_new_mode = target_mode
-                self.last_app_change_time = now
-            
             if (now - self.last_app_change_time) >= self.mode_delay:
-                final_state = self._change_state(target_mode, data)
-        else:
-            self.potential_new_mode = None
+                self.current_state = target_mode
+                iris_logger.info(f"MOD GEÇİŞİ: {target_mode}")
 
-        return final_state, reflex_event
+        return self.current_state, reflex_event, glitch_mode
 
-    def _infer_target_mode(self, app_name, data):
-        # 1. KRİTİK: Batarya
+    def _infer_target_mode(self, app_info, data):
+        # 1. Kritik Durumlar (Pil vb.)
         if data['battery'] < self.config["thresholds"]["battery_alert"]:
             return "ALERT"
 
-        # 2. OTOMATİK TESPİT: Uzantılar
-        coding_exts = [".py", ".cpp", ".js", ".java", ".sql", ".html", ".css", ".go", ".rs", ".ts"]
-        if any(ext in app_name for ext in coding_exts):
-            return "CODING"
-
-        # 3. KATEGORİ REHBERİ
+        # 2. Hiyerarşik Kategori Taraması
+        # Config içindeki sıra çok önemli; özel uygulamalar her zaman üstte olmalı
         for mode, keywords in self.config.get("categories", {}).items():
-            if any(kw in app_name for kw in keywords):
+            if any(kw in app_info for kw in keywords):
                 return mode
 
-        # 4. AKTİF ÇALIŞMA TESPİTİ
-        if data['cpu_usage'] > self.config["thresholds"]["cpu_busy"]:
-            return "BUSY"
-        
+        # 3. Varsayılan
         return "IDLE"
-
-    def _change_state(self, new_state, data):
-        if new_state != self.current_state:
-            iris_logger.info(f"MOD DEĞİŞTİ: {new_state} | Sebep: {data.get('active_app')}")
-            self.current_state = new_state
-        return self.current_state

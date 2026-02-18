@@ -7,8 +7,7 @@ def setup_logger():
     logging.basicConfig(
         filename='logs/iris_system.log',
         level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        format='%(asctime)s - %(levelname)s - %(message)s'
     )
     return logging.getLogger("IRIS")
 

@@ -1,29 +1,48 @@
 {
     "settings": {
-        "polling_interval": 1.0,
-        "mode_switch_delay": 3.0,
+        "polling_interval": 0.05,
+        "mode_switch_delay": 0.8,
+        "glitch_threshold": 0.3,
         "width": 480,
-        "height": 320
+        "height": 320,
+        "fps": 60
     },
     "thresholds": {
-        "cpu_busy": 70,
+        "cpu_busy": 75,
         "battery_alert": 20
     },
     "categories": {
-        "CODING": ["vscode", "pycharm", "cursor", "sublime", "terminal", "dbeaver", "github", "stack overflow"],
-        "SOCIAL": ["whatsapp", "discord", "slack", "telegram", "messenger", "instagram"],
-        "BROWSER": ["google search", "yandex", "bing", "duckduckgo", "wiki"],
-        "MUSIC": ["spotify", "music", "soundcloud", "deezer"],
-        "VIDEO": ["youtube", "netflix", "prime video", "twitch"]
+        "GEMINI": ["gemini", "chatgpt", "claude", "deepseek"],
+        "YOUTUBE": ["youtube"],
+        "NETFLIX": ["netflix"],
+        "SPOTIFY": ["spotify"],
+        "WHATSAPP": ["whatsapp"],
+        "VSCODE": ["visual studio code", "code |", "vsc", ".py", ".js", ".cpp"],
+        "CHROME": ["chrome", "google chrome"],
+        "INSTAGRAM": ["instagram"],
+        "DISCORD": ["discord"],
+        "STEAM": ["steam"],
+        "TERMINAL": ["powershell", "cmd", "terminal", "bash"],
+        "DESIGN": ["photoshop", "figma", "illustrator", "canva", "blend"],
+        "SOCIAL_GENERIC": ["slack", "telegram", "messenger", "twitter", "x.com"]
     },
     "colors": {
-        "IDLE": [0, 40, 0],
-        "BUSY": [100, 60, 0],
-        "ALERT": [100, 0, 0],
-        "SLEEP": [10, 10, 10],
-        "CODING": [0, 80, 150],
-        "SOCIAL": [80, 100, 250],
-        "BROWSER": [100, 100, 100],
-        "MUSIC": [30, 150, 30]
+        "IDLE": [15, 15, 25],
+        "GEMINI": [40, 110, 255],
+        "YOUTUBE": [230, 30, 30],
+        "NETFLIX": [220, 10, 10],
+        "WHATSAPP": [37, 211, 102],
+        "VSCODE": [0, 100, 180],
+        "SPOTIFY": [30, 215, 95],
+        "CHROME": [160, 32, 240],
+        "INSTAGRAM": [220, 40, 150],
+        "DISCORD": [85, 100, 240],
+        "STEAM": [25, 40, 60],
+        "TERMINAL": [30, 200, 50],
+        "DESIGN": [255, 110, 40],
+        "SOCIAL_GENERIC": [100, 50, 150],
+        "ALERT": [255, 30, 30],
+        "SLEEP": [5, 5, 10],
+        "GLOW_WHITE": [245, 250, 255]
     }
 }
