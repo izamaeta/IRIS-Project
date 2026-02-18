@@ -1,6 +1,7 @@
 {
     "settings": {
         "polling_interval": 1.0,
+        "mode_switch_delay": 3.0,
         "width": 480,
         "height": 320
     },
@@ -8,10 +9,21 @@
         "cpu_busy": 70,
         "battery_alert": 20
     },
+    "categories": {
+    "CODING": ["vscode", "pycharm", "cursor", "sublime", "terminal", "dbeaver", "github", "stack overflow"],
+    "SOCIAL": ["whatsapp", "discord", "slack", "telegram", "messenger", "instagram"],
+    "BROWSER": ["google search", "yandex", "bing", "duckduckgo", "wiki"],
+    "MUSIC": ["spotify", "music", "soundcloud", "deezer"],
+    "VIDEO": ["youtube", "netflix", "prime video", "twitch"]
+},
     "colors": {
         "IDLE": [0, 40, 0],
         "BUSY": [100, 60, 0],
         "ALERT": [100, 0, 0],
-        "SLEEP": [10, 10, 10]
+        "SLEEP": [10, 10, 10],
+        "CODING": [0, 80, 150],
+        "SOCIAL": [80, 100, 250],
+        "BROWSER": [100, 100, 100],
+        "MUSIC": [30, 150, 30]
     }
 }
